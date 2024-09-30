@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer with Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #endButton {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Start and Stop Timer</h1>
+    <button id="startButton">Start</button>
+    <button id="endButton">End</button>
+
+    <h2 id="result"></h2>
+
+    <h2>Top 3 Leaderboard</h2>
+    <pre id="leaderboard"></pre> <!-- Display the leaderboard -->
+
+    <script>
+        let startTime, endTime;
+
+        const startButton = document.getElementById("startButton");
+        const endButton = document.getElementById("endButton");
+        const result = document.getElementById("result");
+        const leaderboard = document.getElementById("leaderboard");
+
+        startButton.addEventListener("click", function() {
+            startTime = new Date(); // Start the timer
+            startButton.style.display = "none"; // Hide start button
+            endButton.style.display = "inline"; // Show end button
+        });
+
+        endButton.addEventListener("click", function() {
+            endTime = new Date(); // Stop the timer
+            const elapsedTime = (endTime - startTime) / 1000; // Calculate time in seconds
+            result.textContent = `Time: ${elapsedTime.toFixed(2)} seconds`;
+
+            // Send time to GitHub repository
+            fetch('https://api.github.com/repos/USERNAME/REPO/dispatches', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github.everest-preview+json',
+                    'Authorization': 'token YOUR_GITHUB_TOKEN',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    event_type: "update_leaderboard",
+                    client_payload: {
+                        time: elapsedTime
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // Optionally refresh leaderboard after update
+                fetch('leaderboard.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateLeaderboardDisplay(data);
+                    });
+            });
+
+            startButton.style.display = "inline"; // Show start button again
+            endButton.style.display = "none"; // Hide end button
+        });
+
+        // Function to display leaderboard
+        function updateLeaderboardDisplay(times) {
+            leaderboard.textContent = times
+                .slice(0, 3) // Show top 3 times
+                .map((time, index) => `${index + 1}. ${time.toFixed(2)} seconds`)
+                .join("\n");
+        }
+
+        // Load leaderboard on page load
+        fetch('leaderboard.json')
+            .then(response => response.json())
+            .then(data => {
+                updateLeaderboardDisplay(data);
+            });
+    </script>
+
+</body>
+</html>
