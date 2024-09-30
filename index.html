@@ -46,11 +46,11 @@
             result.textContent = `Time: ${elapsedTime.toFixed(2)} seconds`;
 
             // Send time to GitHub repository
-            fetch('https://api.github.com/repos/USERNAME/REPO/dispatches', {
+            fetch('https://api.github.com/repos/PlayFlixo/automation/dispatches', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/vnd.github.everest-preview+json',
-                    'Authorization': 'token YOUR_GITHUB_TOKEN',
+                    'Authorization': 'token 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',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
