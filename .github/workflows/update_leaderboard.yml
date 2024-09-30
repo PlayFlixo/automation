@@ -15,7 +15,8 @@ jobs:
       - name: Update leaderboard.json
         run: |
           echo "Updating leaderboard.json"
-          echo "INPUT_TIME" >> leaderboard.json # Append new time
+          TIME="${{ github.event.client_payload.time }}" # Get the time from the client payload
+          echo $TIME >> leaderboard.json # Append the new time
           # Sort and get the top 3 times
           jq 'sort | reverse | .[0:3]' leaderboard.json > tmp.json && mv tmp.json leaderboard.json
 
