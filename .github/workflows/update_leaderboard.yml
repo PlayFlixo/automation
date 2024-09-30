@@ -1,0 +1,40 @@
+name: Update Leaderboard
+
+on:
+  repository_dispatch:
+    types: [update_leaderboard]
+
+jobs:
+  update_leaderboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Read and update leaderboard
+        id: update_leaderboard
+        run: |
+          TIMES_FILE=leaderboard.json
+          NEW_TIME="${{ github.event.client_payload.time }}"
+          
+          # Read the existing leaderboard file
+          if [ -f "$TIMES_FILE" ]; then
+            TIMES=$(cat "$TIMES_FILE" | jq '.[]')
+          else
+            TIMES="[]"
+          fi
+
+          # Append new time to leaderboard
+          UPDATED_TIMES=$(echo "$TIMES" | jq ". + [$NEW_TIME]" | jq 'sort | .[:3]')
+
+          # Update the leaderboard JSON file
+          echo "$UPDATED_TIMES" | jq '.' > "$TIMES_FILE"
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add leaderboard.json
+          git commit -m "Updated leaderboard"
+          git push
