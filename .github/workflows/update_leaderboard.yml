@@ -5,36 +5,26 @@ on:
     types: [update_leaderboard]
 
 jobs:
-  update_leaderboard:
+  update-leaderboard:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Read and update leaderboard
-        id: update_leaderboard
+      - name: Update leaderboard.json
         run: |
-          TIMES_FILE=leaderboard.json
-          NEW_TIME="${{ github.event.client_payload.time }}"
-          
-          # Read the existing leaderboard file
-          if [ -f "$TIMES_FILE" ]; then
-            TIMES=$(cat "$TIMES_FILE" | jq '.[]')
-          else
-            TIMES="[]"
-          fi
-
-          # Append new time to leaderboard
-          UPDATED_TIMES=$(echo "$TIMES" | jq ". + [$NEW_TIME]" | jq 'sort | .[:3]')
-
-          # Update the leaderboard JSON file
-          echo "$UPDATED_TIMES" | jq '.' > "$TIMES_FILE"
+          echo "Updating leaderboard.json"
+          echo "INPUT_TIME" >> leaderboard.json # Append new time
+          # Sort and get the top 3 times
+          jq 'sort | reverse | .[0:3]' leaderboard.json > tmp.json && mv tmp.json leaderboard.json
 
       - name: Commit and push changes
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.email "you@example.com"
+          git config --local user.name "Your Name"
           git add leaderboard.json
-          git commit -m "Updated leaderboard"
+          git commit -m "Update leaderboard.json"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
