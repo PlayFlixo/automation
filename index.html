@@ -96,15 +96,21 @@
     </div>
     
     <script>
-        let users = []; // Initialize an empty array to hold user data
-
-        // Fetch user data from the JSON file
-        fetch('users.json')
-            .then(response => response.json())
-            .then(data => {
-                users = data; // Store the fetched user data
-            })
-            .catch(error => console.error('Error loading user data:', error));
+        // Simulated user data with hashed passwords
+        const users = [
+            {
+                "username": "admin",
+                "password": "5f4dcc3b5aa765d61d8327deb882cf99" // Hashed password for "password"
+            },
+            {
+                "username": "user1",
+                "password": "e99a18c428cb38d5f260853678922e03" // Hashed password for "test"
+            },
+            {
+                "username": "user2",
+                "password": "d8578edf8458ce06fbc5bb76a58c5ca4" // Hashed password for "test789"
+            }
+        ];
 
         // A function to hash the password input
         function hashPassword(password) {
@@ -119,7 +125,7 @@
             const hashedInputPassword = hashPassword(password); // Hash the entered password
             const messageDiv = document.getElementById('message');
 
-            // Find user in the fetched user data
+            // Find user in the simulated user data
             const user = users.find(user => user.username === username);
 
             if (user) {
