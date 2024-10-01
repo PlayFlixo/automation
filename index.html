@@ -3,93 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timer with Leaderboard</title>
+    <title>Login System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            margin: 0;
+            color: white;
         }
-        #endButton {
-            display: none;
+
+        .container {
+            background: transparent;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 106, 61, 0.5);
+            width: 300px;
+            text-align: center;
+            border: 1px solid rgba(255, 106, 61, 0.5);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 106, 61, 0.5);
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: transparent;
+            color: white;
+            transition: border-color 0.3s;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7); /* Placeholder color */
+        }
+
+        input:focus {
+            border-color: #ff6a3d; /* Change border color on focus */
+            outline: none; /* Remove outline */
+        }
+
+        button {
+            padding: 10px;
+            background-color: #ff6a3d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: white;
+            color: #ff6a3d;
+            transform: scale(1.05); /* Slight scale on hover */
+        }
+
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        #message.success {
+            color: green;
+        }
+
+        #message.error {
+            color: red;
         }
     </style>
 </head>
 <body>
-
-    <h1>Start and Stop Timer</h1>
-    <button id="startButton">Start</button>
-    <button id="endButton">End</button>
-
-    <h2 id="result"></h2>
-
-    <h2>Top 3 Leaderboard</h2>
-    <pre id="leaderboard"></pre> <!-- Display the leaderboard -->
-
+    <div class="container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    
     <script>
-        let startTime, endTime;
+        let users = []; // Initialize an empty array to hold user data
 
-        const startButton = document.getElementById("startButton");
-        const endButton = document.getElementById("endButton");
-        const result = document.getElementById("result");
-        const leaderboard = document.getElementById("leaderboard");
-
-        startButton.addEventListener("click", function() {
-            startTime = new Date(); // Start the timer
-            startButton.style.display = "none"; // Hide start button
-            endButton.style.display = "inline"; // Show end button
-        });
-
-        endButton.addEventListener("click", function() {
-            endTime = new Date(); // Stop the timer
-            const elapsedTime = (endTime - startTime) / 1000; // Calculate time in seconds
-            result.textContent = `Time: ${elapsedTime.toFixed(2)} seconds`;
-
-            // Send time to GitHub repository
-            fetch('https://api.github.com/repos/PlayFlixo/automation/dispatches', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github.everest-preview+json',
-                    'Authorization': 'token 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',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    event_type: "update_leaderboard",
-                    client_payload: {
-                        time: elapsedTime
-                    }
-                })
-            })
+        // Fetch user data from the JSON file
+        fetch('users.json')
             .then(response => response.json())
             .then(data => {
-                console.log(data);
-                // Optionally refresh leaderboard after update
-                fetch('leaderboard.json')
-                    .then(response => response.json())
-                    .then(data => {
-                        updateLeaderboardDisplay(data);
-                    });
-            });
+                users = data; // Store the fetched user data
+            })
+            .catch(error => console.error('Error loading user data:', error));
 
-            startButton.style.display = "inline"; // Show start button again
-            endButton.style.display = "none"; // Hide end button
-        });
-
-        // Function to display leaderboard
-        function updateLeaderboardDisplay(times) {
-            leaderboard.textContent = times
-                .slice(0, 3) // Show top 3 times
-                .map((time, index) => `${index + 1}. ${time.toFixed(2)} seconds`)
-                .join("\n");
+        // A function to hash the password input
+        function hashPassword(password) {
+            return CryptoJS.MD5(password).toString(); // Use MD5 for hashing
         }
 
-        // Load leaderboard on page load
-        fetch('leaderboard.json')
-            .then(response => response.json())
-            .then(data => {
-                updateLeaderboardDisplay(data);
-            });
-    </script>
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
 
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const hashedInputPassword = hashPassword(password); // Hash the entered password
+            const messageDiv = document.getElementById('message');
+
+            // Find user in the fetched user data
+            const user = users.find(user => user.username === username);
+
+            if (user) {
+                // Check if the hashed password matches
+                if (user.password === hashedInputPassword) {
+                    messageDiv.textContent = 'Login successful!';
+                    messageDiv.className = 'success';
+
+                    // Save the username to local storage
+                    localStorage.setItem('username', username);
+
+                    // Redirect to the dashboard
+                    window.location.href = '/dashboard'; // Redirect to the dashboard page
+                } else {
+                    messageDiv.textContent = 'Invalid username or password';
+                    messageDiv.className = 'error';
+                }
+            } else {
+                messageDiv.textContent = 'Invalid username or password';
+                messageDiv.className = 'error';
+            }
+        });
+    </script>
 </body>
 </html>
